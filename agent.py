@@ -189,9 +189,9 @@ if __name__ == "__main__":
         print(f"\nOutfit: {session['outfit_suggestion']}")
         print(f"\nFit card: {session['fit_card']}")
 
-    print("\n\n=== No-results path ===\n")
+    print("\n\n=== No Results ===\n")
     session2 = run_agent(
         query="designer ballgown size XXS under $5",
         wardrobe=get_example_wardrobe(),
     )
-    print(f"Error message: {session2['error']}")
+    print(f"Error: {session2['error']}")

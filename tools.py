@@ -173,7 +173,7 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 
     client = _get_groq_client()
     response = client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
@@ -236,7 +236,7 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
 
     client = _get_groq_client()
     response = client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
