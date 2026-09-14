@@ -141,12 +141,16 @@ Write out what a full user interaction looks like from start to finish — tool 
 
 **Step 1:**
 <!-- What does the agent do first? Which tool is called? With what input? -->
+The tool is called `search_listings` and for inputs, it takes `description` ("vintage graphic tee"), `max_price` (30.0), and `size` from the items that exist inside the listings json.
 
 **Step 2:**
 <!-- What happens next? What was returned from step 1? What tool is called now? -->
+`suggest_outfit` is called with `new_item` (the graphic tee listing) and `wardrobe` (baggy jeans plus the chunky sneakers). Suggested outfit tool returns an outfit suggestion on how the vintage graphic tee can be styled with the other wardrobe items the user mentioned.
 
 **Step 3:**
 <!-- Continue until the full interaction is complete -->
+`create_fit_card` is called with the generated suggestion from `suggest_outfit` tool and also `new_item`. The fit card gets made, containing item details, outfit descriptions, and the styling recommendation.
 
 **Final output to user:**
 <!-- What does the user actually see at the end? -->
+The user is presented with the fit card, the recommended outfit using the items they mentioned (baggy jeans and chunky sneakers), and a graphic tee from the lsitings that best matches the users description of what they wanted, along with its price. No matches will output that no matches were found and that criteria should be changed to get better results.
