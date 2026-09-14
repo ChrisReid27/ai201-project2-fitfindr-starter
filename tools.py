@@ -124,8 +124,67 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 
     Before writing code, fill in the Tool 2 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+    wardrobe_items = wardrobe.get("items", [])
+    item_details = (
+        f"Title: {new_item.get('title', 'Unknown item')}\n"
+        f"Description: {new_item.get('description', '')}\n"
+        f"Category: {new_item.get('category', '')}\n"
+        f"Style tags: {', '.join(new_item.get('style_tags', []))}\n"
+        f"Colors: {', '.join(new_item.get('colors', []))}"
+    )
+
+    if wardrobe_items:
+        wardrobe_details = "\n".join(
+            "- "
+            + "; ".join(
+                part
+                for part in (
+                    item.get("name", "Unnamed item"),
+                    f"category: {item.get('category', '')}",
+                    f"colors: {', '.join(item.get('colors', []))}",
+                    f"style tags: {', '.join(item.get('style_tags', []))}",
+                    f"notes: {item.get('notes')}" if item.get("notes") else "",
+                )
+                if part
+            )
+            for item in wardrobe_items
+        )
+        request = (
+            "Suggest 1 or 2 complete outfits using the new item and named pieces "
+            "from the user's wardrobe. Include a top, bottom, shoes, and useful "
+            "accessories or outerwear when appropriate. Explain briefly why the "
+            "colors and proportions work. Do not invent wardrobe pieces."
+        )
+    else:
+        wardrobe_details = "The wardrobe is empty."
+        request = (
+            "Suggest 1 or 2 complete outfit ideas for the new item using commonly "
+            "available pieces. Give practical pairing, color, layering, and "
+            "accessory advice, and describe the overall vibe."
+        )
+
+    prompt = (
+        "You are a helpful personal stylist specializing in thrifted fashion.\n\n"
+        f"New item:\n{item_details}\n\n"
+        f"User wardrobe:\n{wardrobe_details}\n\n"
+        f"{request}\n"
+        "Format the response as clear, concise outfit suggestions."
+    )
+
+    client = _get_groq_client()
+    response = client.chat.completions.create(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        messages=[
+            {
+                "role": "system",
+                "content": "You give specific, wearable outfit advice.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.7,
+        max_tokens=500,
+    )
+    return response.choices[0].message.content.strip()
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
