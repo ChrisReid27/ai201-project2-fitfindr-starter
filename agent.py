@@ -18,6 +18,8 @@ Usage (once implemented):
     print(result["error"])   # None on success
 """
 
+import re
+
 from tools import search_listings, suggest_outfit, create_fit_card
 
 
@@ -92,9 +94,81 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     Before writing code, complete the Planning Loop and State Management sections
     of planning.md — your implementation should match what you described there.
     """
-    # TODO: implement the planning loop
     session = _new_session(query, wardrobe)
-    session["error"] = "Planning loop not yet implemented."
+
+    query_text = query.strip()
+    price_match = re.search(
+        r"(?:under|below|less than|up to|maximum|max(?:imum)?(?: price)?\s*(?:of)?)\s*\$?\s*(\d+(?:\.\d+)?)",
+        query_text,
+        flags=re.IGNORECASE,
+    )
+    size_match = re.search(
+        r"\b(?:size|sized)\s*[:=]?\s*([A-Za-z0-9]+(?:\/[A-Za-z0-9]+)?)\b",
+        query_text,
+        flags=re.IGNORECASE,
+    )
+
+    max_price = float(price_match.group(1)) if price_match else None
+    size = size_match.group(1) if size_match else None
+    description = query_text
+    if price_match:
+        description = description.replace(price_match.group(0), " ")
+    if size_match:
+        description = description.replace(size_match.group(0), " ")
+    description = re.sub(
+        r"\b(?:i(?:'m| am)?\s+)?(?:looking for|searching for|find me|want|need)\b",
+        " ",
+        description,
+        flags=re.IGNORECASE,
+    )
+    description = re.sub(r"\s+", " ", description).strip(" ,")
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
+
+    try:
+        session["search_results"] = search_listings(
+            description=description,
+            size=size,
+            max_price=max_price,
+        )
+    except Exception as exc:
+        session["error"] = f"Unable to search listings: {exc}"
+        return session
+
+    if not session["search_results"]:
+        session["error"] = "No listings matched your search. Try broader criteria."
+        return session
+
+    session["selected_item"] = session["search_results"][0]
+
+    try:
+        session["outfit_suggestion"] = suggest_outfit(
+            session["selected_item"], session["wardrobe"]
+        )
+    except Exception as exc:
+        session["error"] = f"Unable to suggest an outfit: {exc}"
+        return session
+
+    if not isinstance(session["outfit_suggestion"], str) or not session[
+        "outfit_suggestion"
+    ].strip():
+        session["error"] = "Unable to suggest an outfit because no outfit was returned."
+        return session
+
+    try:
+        session["fit_card"] = create_fit_card(
+            session["outfit_suggestion"], session["selected_item"]
+        )
+    except Exception as exc:
+        session["error"] = f"Unable to create a fit card: {exc}"
+        return session
+
+    if not isinstance(session["fit_card"], str) or not session["fit_card"].strip():
+        session["error"] = "Unable to create a fit card because no caption was returned."
     return session
 
 
