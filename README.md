@@ -68,6 +68,8 @@ Your README submission must document each tool's name, inputs, and return value.
 
 ---
 
+## Video Demo
+
 ## Interaction Walkthrough
 
 <!-- Walk through a complete interaction step by step: natural language query → each tool call (and why) → final fit card.
