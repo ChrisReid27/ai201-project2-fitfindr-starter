@@ -52,10 +52,10 @@ def handle_query(user_query: str, wardrobe_choice: str) -> tuple[str, str, str]:
         wardrobe = get_example_wardrobe()
 
     session = run_agent(user_query, wardrobe)
-    if session["error"]:
-        return session["error"], "", ""
+    item = session.get("selected_item")
+    if not item:
+        return session["error"] or "No listing was found.", "", ""
 
-    item = session["selected_item"]
     listing_text = (
         f"{item['title']}\n"
         f"Price: ${item['price']:.2f}\n"
@@ -67,10 +67,21 @@ def handle_query(user_query: str, wardrobe_choice: str) -> tuple[str, str, str]:
         f"Brand: {item['brand'] or 'Unknown'}\n\n"
         f"{item['description']}"
     )
+
+    outfit_text = session.get("outfit_suggestion") or ""
+    fit_card_text = session.get("fit_card") or ""
+    if session["error"]:
+        if session["error"].startswith("Unable to suggest an outfit"):
+            outfit_text = session["error"]
+        elif session["error"].startswith("Unable to create a fit card"):
+            fit_card_text = session["error"]
+        else:
+            listing_text = f"{session['error']}\n\n{listing_text}"
+
     return (
         listing_text,
-        session["outfit_suggestion"],
-        session["fit_card"],
+        outfit_text,
+        fit_card_text,
     )
 
 

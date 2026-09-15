@@ -184,7 +184,15 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         temperature=0.7,
         max_tokens=500,
     )
-    return response.choices[0].message.content.strip()
+    content = response.choices[0].message.content
+
+    if content and content.strip():
+        return content.strip()
+
+    raise RuntimeError(
+        "FitFindr could not return a distinct fit-card caption "
+        f"(finish reason: {response.choices[0].finish_reason})."
+    )
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -227,7 +235,8 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         "an OOTD post. Mention the item name, its price, and its platform exactly "
         "once each. Capture the outfit's specific vibe using details from the "
         "suggestion. Sound like a real person sharing a thrifted find, not a "
-        "product description. Do not add headings or explain your process.\n\n"
+        "product description. Do not copy the outfit suggestion verbatim, add "
+        "headings, or explain your process. Keep the final caption under 80 words.\n\n"
         f"Item name: {item_title}\n"
         f"Price: ${item_price}\n"
         f"Platform: {item_platform}\n"
@@ -245,6 +254,14 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
             {"role": "user", "content": prompt},
         ],
         temperature=0.9,
-        max_tokens=200,
+        max_tokens=500,
     )
-    return response.choices[0].message.content.strip()
+    caption = response.choices[0].message.content
+    caption_text = caption.strip() if caption else ""
+    if caption_text and caption_text.casefold() != outfit.strip().casefold():
+        return caption_text
+
+    raise RuntimeError(
+        "FitFindr could not return a distinct fit-card caption "
+        f"(finish reason: {response.choices[0].finish_reason})."
+    )
